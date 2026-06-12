@@ -301,16 +301,12 @@ function MilestoneCard({ config, milestones, onUpload }: {
       {!config.adminOnly && (
         <button
           onClick={onUpload}
-          className={`mt-auto flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-semibold transition
-            ${lastStatus === 'pending'
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
-          disabled={lastStatus === 'pending'}
+          className="mt-auto flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-semibold transition bg-primary/10 text-primary hover:bg-primary hover:text-white"
         >
           <Upload size={13} />
           {!hasAny ? 'Subir certificado'
             : lastStatus === 'rejected' ? 'Volver a subir'
-            : lastStatus === 'pending' ? 'En revisión...'
+            : lastStatus === 'pending' ? 'Reemplazar envío'
             : config.multi ? 'Agregar otro' : 'Subir certificado'}
         </button>
       )}

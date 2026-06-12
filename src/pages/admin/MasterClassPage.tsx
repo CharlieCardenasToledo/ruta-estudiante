@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   collection, addDoc, getDocs, deleteDoc,
-  doc, query, orderBy, serverTimestamp, where,
+  doc, query, orderBy, serverTimestamp, where, getCountFromServer,
 } from 'firebase/firestore'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -30,13 +30,13 @@ export default function MasterClassPage() {
     const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as MasterClassCatalogItem))
     setItems(list)
 
-    // Count students with approved milestone for each master class
+    // Count certificates per master class using aggregate (no document downloads)
     const countMap: Record<string, number> = {}
     await Promise.all(list.map(async item => {
-      const mSnap = await getDocs(
+      const snap = await getCountFromServer(
         query(collection(db, 'milestones'), where('type', '==', 'master_class'), where('title', '==', item.title))
       )
-      countMap[item.id] = mSnap.size
+      countMap[item.id] = snap.data().count
     }))
     setCounts(countMap)
     setLoading(false)

@@ -136,11 +136,14 @@ function DirectoryView({ onTabChange }: { onTabChange: (t: Tab) => void }) {
     navigate(`/admin/estudiantes/${uid}${qs ? `?${qs}` : ''}`)
   }
 
+  const normalize = (s: string) =>
+    s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
   const filtered = students.filter(s => {
-    const term = search.toLowerCase()
+    const term = normalize(search)
     const matchSearch =
-      s.displayName.toLowerCase().includes(term) ||
-      s.email.toLowerCase().includes(term) ||
+      normalize(s.displayName).includes(term) ||
+      normalize(s.email).includes(term) ||
       (s.cedula ?? '').includes(term)
     const matchCiclo = !ciclo || (s.ciclo ?? '').toLowerCase() === ciclo.toLowerCase()
     const matchEstado = !estado || (s.estadoAcademico ?? 'en_curso') === estado
