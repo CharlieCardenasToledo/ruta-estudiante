@@ -50,24 +50,36 @@ export default function HorasPage() {
   useEffect(() => { void load() }, [load])
 
   const approve = async (log: LogWithStudent) => {
-    await updateDoc(doc(db, 'hoursLogs', log.id), {
-      status: 'approved',
-      updatedAt: serverTimestamp(),
-    })
-    await updateDoc(doc(db, 'internships', log.internshipId), {
-      totalHoursApproved: increment(log.hours),
-    })
-    toast.success(`${log.hours} horas aprobadas`)
-    setLogs(prev => prev.filter(l => l.id !== log.id))
+    try {
+      await updateDoc(doc(db, 'hoursLogs', log.id), {
+        status: 'approved',
+        updatedAt: serverTimestamp(),
+      })
+      await updateDoc(doc(db, 'internships', log.internshipId), {
+        totalHoursApproved: increment(log.hours),
+        totalHoursDeclared: increment(log.hours),
+      })
+      toast.success(`${log.hours} horas aprobadas`)
+      setLogs(prev => prev.filter(l => l.id !== log.id))
+    } catch {
+      toast.error('Error al aprobar. Intenta de nuevo.')
+    }
   }
 
   const reject = async (log: LogWithStudent) => {
-    await updateDoc(doc(db, 'hoursLogs', log.id), {
-      status: 'rejected',
-      updatedAt: serverTimestamp(),
-    })
-    toast.success('Registro rechazado')
-    setLogs(prev => prev.filter(l => l.id !== log.id))
+    try {
+      await updateDoc(doc(db, 'hoursLogs', log.id), {
+        status: 'rejected',
+        updatedAt: serverTimestamp(),
+      })
+      await updateDoc(doc(db, 'internships', log.internshipId), {
+        totalHoursDeclared: increment(-log.hours),
+      })
+      toast.success('Registro rechazado')
+      setLogs(prev => prev.filter(l => l.id !== log.id))
+    } catch {
+      toast.error('Error al rechazar. Intenta de nuevo.')
+    }
   }
 
   const pendingCount = filter === 'pending' ? logs.length : null

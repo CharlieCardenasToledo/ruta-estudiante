@@ -334,8 +334,10 @@ function UploadModal({ config, studentId, catalog, onClose, onSuccess }: {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  const MAX_FILE_MB = 10
   const handleSubmit = async () => {
     if (!file) { toast.error('Selecciona un archivo'); return }
+    if (file.size > MAX_FILE_MB * 1024 * 1024) { toast.error(`El archivo no puede superar ${MAX_FILE_MB} MB`); return }
     if (config.multi && !title.trim()) { toast.error('Selecciona o escribe el nombre del certificado'); return }
 
     setUploading(true)

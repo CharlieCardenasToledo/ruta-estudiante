@@ -18,10 +18,13 @@ service cloud.firestore {
     match /users/{uid} {
       // Students see only their own doc; teachers see all (for student name lookup)
       allow read: if isOwner(uid) || isAdmin() || isTeacher();
-      // Only admin creates/updates other accounts; student can update own non-role fields
+      // Only admin creates/updates other accounts; student can update own non-critical fields
       allow create: if isAdmin();
       allow update: if isAdmin()
-        || (isOwner(uid) && !('role' in request.resource.data.diff(resource.data).affectedKeys()));
+        || (isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+              'role', 'estadoAcademico', 'cohortId', 'ciclo', 'currentCycle',
+              'cedula', 'malla', 'schoolId', 'cycleStatus'
+           ]));
     }
 
     // ── cohorts ───────────────────────────────────────────────────────────────
@@ -47,16 +50,26 @@ service cloud.firestore {
         || (isStudent() && isOwner(resource.data.studentId));
       allow create: if isAdmin()
         || (isStudent() && isOwner(request.resource.data.studentId));
+      // Students can update own internship but cannot touch approval/audit fields
       allow update: if isAdmin() || isTeacher()
-        || (isStudent() && isOwner(resource.data.studentId));
+        || (isStudent() && isOwner(resource.data.studentId)
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                 'totalHoursApproved', 'totalHoursDeclared', 'status',
+                 'tutorId', 'studentId'
+               ]));
     }
 
     // ── hoursLogs ─────────────────────────────────────────────────────────────
     match /hoursLogs/{id} {
       allow read: if isAdmin() || isTeacher()
         || (isStudent() && isOwner(resource.data.studentId));
+      // Students can only create pending logs with valid hours range
       allow create: if isAdmin()
-        || (isStudent() && isOwner(request.resource.data.studentId));
+        || (isStudent() && isOwner(request.resource.data.studentId)
+            && request.resource.data.status == 'pending'
+            && request.resource.data.hours is int
+            && request.resource.data.hours >= 1
+            && request.resource.data.hours <= 12);
       // Only teacher/admin can change status
       allow update: if isAdmin() || isTeacher();
     }

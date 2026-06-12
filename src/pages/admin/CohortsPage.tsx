@@ -35,6 +35,12 @@ const schema = z.object({
   graduationDate:           z.string().optional(),
   internshipHoursRequired:  z.coerce.number().min(1, 'Ingresa las horas requeridas'),
   internshipPeriods:        z.coerce.number().min(1, 'Ingresa el número de períodos'),
+}).refine(d => d.endDate > d.startDate, {
+  message: 'La fecha de fin debe ser posterior a la de inicio',
+  path: ['endDate'],
+}).refine(d => !d.graduationDate || d.graduationDate >= d.endDate, {
+  message: 'La fecha de graduación debe ser posterior al fin del período',
+  path: ['graduationDate'],
 })
 
 type FormData = z.infer<typeof schema>

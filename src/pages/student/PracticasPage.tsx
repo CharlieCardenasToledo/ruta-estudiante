@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  collection, query, where, getDocs, addDoc,
-  serverTimestamp, orderBy, doc, getDoc, updateDoc, increment,
+  collection, query, where, getDocs,
+  serverTimestamp, orderBy, doc, getDoc, writeBatch, increment,
 } from 'firebase/firestore'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -205,18 +205,21 @@ function DeclareForm({
   const onSubmit = async (data: FormData) => {
     setSaving(true)
     try {
-      await addDoc(collection(db, 'hoursLogs'), {
+      const batch = writeBatch(db)
+      const logRef = doc(collection(db, 'hoursLogs'))
+      batch.set(logRef, {
         internshipId,
         studentId,
-        date:     new Date(data.date + 'T12:00:00'),
-        hours:    data.hours,
-        activity: data.activity,
-        status:   'pending',
+        date:      new Date(data.date + 'T12:00:00'),
+        hours:     data.hours,
+        activity:  data.activity,
+        status:    'pending',
         createdAt: serverTimestamp(),
       })
-      await updateDoc(doc(db, 'internships', internshipId), {
+      batch.update(doc(db, 'internships', internshipId), {
         totalHoursDeclared: increment(data.hours),
       })
+      await batch.commit()
       toast.success('Horas declaradas — pendiente de aprobación')
       onSaved()
     } catch {
